@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Venta Discos</title>
+    <link rel="preload" href="styles.css" as="style" />
+    <link href="styles.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.2/dist/umd/popper.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+    <script type="text/javascript">
+        $(document).ready(function() {
+            $(document).ready(function() {
+                
+                console.log("Página cargada, cargando discos..");
+
+                cargarDiscos(); 
+            });
+
+            function cargarDiscos() {
+                $.ajax({
+                    type: "GET",
+                    url: "logicaMostrarDiscos.php",
+                    dataType: "json",
+                    success: function(respuesta) {
+                        if (respuesta.success) {
+                            const tbody = $('#discosTableBody');
+                            tbody.empty();
+                            if (respuesta.discos && respuesta.discos.length > 0) {
+                                respuesta.discos.forEach(function(discos) {
+                                    const row = `<tr>
+                                <td>${discos.IdDisco}</td>
+                                <td>${discos.NombreDisco}</td>
+                                <td>${discos.Artista}</td>
+                                <td>${discos.Genero}</td>
+                                <td>${discos.Discografia}</td>
+                                <td>${discos.Precio}</td>
+                                <td><a class="eliminar" data-id="${discos.IdDisco}" href="#">Eliminar</a></td>
+                            </tr>`;
+                                    tbody.append(row);
+                                });
+                            } else {
+                                tbody.append("<tr><td colspan='4'>No se encontraron palabras para traducir</td></tr>");
+                            }
+                        } else {
+                            alert("Error: " + respuesta.error);
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("Error al cargar discos:", error);
+                        alert("Error al cargar traduccion");
+                    },
+                });
+            }
+
+            $(document).on('click', '.eliminar', function(e) {
+                e.preventDefault();
+                var id = $(this).data('id');
+
+                if (confirm("Estas seguro de que quieres eliminar este registro?")) {
+                    $.ajax({
+                        type: "POST",
+                        url: "logicaEliminar.php",
+                        data: {
+                            id: id
+                        },
+                        dataType: "json",
+                        success: function(respuesta) {
+                            if (respuesta.success) {
+                                $("#resultado").text("Registro eliminado con éxito");
+                                
+                            } else {
+                                alert("Error: " + respuesta.error);
+                                $("#resultado").text("Error al eliminar el registro " + respuesta.error);
+                            }
+                            cargarDiscos();
+                        },
+                        error: function(xhr, status, error) {
+                            alert("Ocurrio un error en la solicitud " + error);
+                        }
+                        
+
+                    });
+                }
+            });
+
+            function convertir() {
+                var dinero = parseFloat(document.getElementById("dinero").value);
+                var moneda = document.getElementById("calc").value;
+                var resultado;
+                
+                if (moneda === "usd") {
+                    resultado = dinero * 0.93; 
+                } else if (moneda === "gpd") {
+                    resultado = dinero * 1.18; 
+                } else if (moneda === "jpy") {
+                    resultado = dinero * 0.0065; 
+                } else {
+                    alert("Selecciona una moneda válida");
+                    return;
+                }
+                alert("La conversión a euros es de: "+resultado+" euros");
+                
+            }
+
+            $('#botonCalcular').on('click', function() {
+                convertir();
+            });
+
+        });
+    </script>
+</head>
+
+<body>
+    <div id="MuestraDiscos">
+        <div class="container mt-5">
+            <h1 class="text-center">Discos de la tienda: </h1>
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Referencia Disco</th>
+                        <th>Nombre Disco</th>
+                        <th>Artista</th>
+                        <th>Genero</th>
+                        <th>Discografia</th>
+                        <th>Precio</th>
+                        <th>Eliminar</th>
+                    </tr>
+                </thead>
+                <tbody id="discosTableBody">
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-center">
+        <a href="merch.html" class="btn btn-primary">Ir a pagina para añadir merchandising</a>
+    </div>
+
+    <div class="container mt-5" class="text-center" id="calculadora">
+        <label for="tipo" class="form-label">Calculadora</label>
+        <input type="number" id="dinero" placeholder="Escribe cantidad">
+
+        <select class="form-select" id="calc" name="calc" required>
+            <option value="" selected disabled>Selecciona una moneda</option>
+            <option value="usd" id="usd">usd</option>
+            <option value="gpd" id="gpd">gpd</option>
+            <option value="jpy" id="jpy">jpy</option>
+        </select>
+    </br>
+        <button id="botonCalcular">Calcular</button>
+    </div>
+
+
+</body>
+
+</html>
